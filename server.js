@@ -12,6 +12,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Endpoint kiểm tra hoạt động & giữ server không ngủ (Ping/Pong)
+app.get('/ping', (req, res) => {
+    res.status(200).send('pong');
+});
+
 // Connect to MongoDB Atlas
 const MONGODB_URI = process.env.MONGODB_URI;
 if (!MONGODB_URI) {
@@ -57,4 +62,13 @@ app.post('/api/wishes', async (req, res) => {
 // Khởi chạy Server
 app.listen(PORT, () => {
     console.log(`🚀 Server Wedding đang chạy tại http://localhost:${PORT}`);
+
+    // Cơ chế tự động ping định kỳ mỗi 13 phút để giữ server Render không ngủ
+    const SERVER_URL = process.env.RENDER_EXTERNAL_URL || 'https://be-thiepcuoi-khanh.onrender.com';
+    setInterval(() => {
+        fetch(`${SERVER_URL}/ping`)
+            .then(res => res.text())
+            .then(txt => console.log(`[Keep-Alive] Ping thành công tới ${SERVER_URL}/ping lúc ${new Date().toLocaleTimeString('vi-VN')}: ${txt}`))
+            .catch(err => console.log(`[Keep-Alive] Lỗi ping:`, err.message));
+    }, 13 * 60 * 1000); // Mỗi 13 phút (trước mốc 15 phút của Render)
 });
