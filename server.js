@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const Wish = require('./models/Wish');
+const WishBride = require('./models/WishBride');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,18 +29,21 @@ mongoose.connect(MONGODB_URI)
     .then(() => console.log('✅ Kết nối MongoDB thành công'))
     .catch(err => console.error('❌ Lỗi kết nối CSDL:', err));
 
-// API 1: Lấy danh sách lời chúc
+// ============================================
+// API NHÀ TRAI (Bảng/Collection: wishes)
+// ============================================
+// Lấy danh sách lời chúc Nhà Trai
 app.get('/api/wishes', async (req, res) => {
     try {
         const wishes = await Wish.find().sort({ createdAt: -1 }).limit(50);
         res.json(wishes);
     } catch (error) {
-        console.error("Lỗi GET wishes:", error);
+        console.error("Lỗi GET wishes Nhà Trai:", error);
         res.status(500).json({ error: 'Lỗi server khi lấy lời chúc' });
     }
 });
 
-// API 2: Gửi lời chúc mới
+// Gửi lời chúc mới Nhà Trai
 app.post('/api/wishes', async (req, res) => {
     try {
         const { name, message } = req.body;
@@ -53,7 +57,40 @@ app.post('/api/wishes', async (req, res) => {
 
         res.status(201).json({ success: true, wish: newWish });
     } catch (error) {
-        console.error("Lỗi POST wish:", error);
+        console.error("Lỗi POST wish Nhà Trai:", error);
+        res.status(500).json({ error: 'Lỗi server khi lưu lời chúc' });
+    }
+});
+
+// ============================================
+// API NHÀ GÁI (Bảng/Collection: wishes_nhagai)
+// ============================================
+// Lấy danh sách lời chúc Nhà Gái
+app.get(['/api/wishes-nhagai', '/api/wishes/nhagai'], async (req, res) => {
+    try {
+        const wishes = await WishBride.find().sort({ createdAt: -1 }).limit(50);
+        res.json(wishes);
+    } catch (error) {
+        console.error("Lỗi GET wishes Nhà Gái:", error);
+        res.status(500).json({ error: 'Lỗi server khi lấy lời chúc' });
+    }
+});
+
+// Gửi lời chúc mới Nhà Gái
+app.post(['/api/wishes-nhagai', '/api/wishes/nhagai'], async (req, res) => {
+    try {
+        const { name, message } = req.body;
+
+        if (!name || !message) {
+            return res.status(400).json({ error: 'Vui lòng nhập đầy đủ tên và lời chúc' });
+        }
+
+        const newWish = new WishBride({ name, message });
+        await newWish.save();
+
+        res.status(201).json({ success: true, wish: newWish });
+    } catch (error) {
+        console.error("Lỗi POST wish Nhà Gái:", error);
         res.status(500).json({ error: 'Lỗi server khi lưu lời chúc' });
     }
 });
